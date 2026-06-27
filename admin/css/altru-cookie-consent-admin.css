@@ -1,0 +1,43 @@
+/**
+ * All of the CSS for the admin area of the plugin.
+ *
+ * @since      1.0.0
+ * @package    Altru_Cookie_Consent
+ * @subpackage Altru_Cookie_Consent/admin/css
+ */
+
+.wrap h2 {
+	font-weight: 600;
+	margin-bottom: 20px;
+	color: #1d2327;
+}
+
+.form-table th {
+	font-weight: 600;
+	color: #1d2327;
+	width: 200px;
+}
+
+.form-table input[type="text"].regular-text {
+	width: 100%;
+	max-width: 500px;
+	border-radius: 6px;
+	padding: 8px 12px;
+	border: 1px solid #8c8f94;
+}
+
+.form-table textarea.large-text {
+	width: 100%;
+	max-width: 500px;
+	border-radius: 6px;
+	padding: 8px 12px;
+	border: 1px solid #8c8f94;
+	line-height: 1.5;
+}
+
+.form-table input:focus, 
+.form-table textarea:focus {
+	border-color: #2271b1;
+	box-shadow: 0 0 0 1px #2271b1;
+	outline: 2px solid transparent;
+}
