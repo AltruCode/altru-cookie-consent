@@ -100,4 +100,111 @@ class Altru_Cookie_Consent_Public {
 		// Check if user has already accepted cookies (using Javascript cookie check mostly, but we can do a check or just render and let JS hide it)
 		require_once plugin_dir_path( __FILE__ ) . 'partials/altru-cookie-consent-public-display.php';
 	}
+
+	/**
+	 * Start the output buffer to capture HTML before it is sent to the client.
+	 *
+	 * @since    1.0.0
+	 */
+	public function start_buffer() {
+		if ( ! is_admin() && ! wp_doing_ajax() && ! wp_is_json_request() ) {
+			ob_start( array( $this, 'filter_html_output' ) );
+		}
+	}
+
+	/**
+	 * Process and filter the captured HTML output.
+	 *
+	 * @since    1.0.0
+	 * @param    string $html The captured HTML.
+	 * @return   string The filtered HTML.
+	 */
+	public function filter_html_output( $html ) {
+		if ( empty( $html ) || false === stripos( $html, '<html' ) ) {
+			return $html;
+		}
+
+		// Parse and filter script tags
+		return preg_replace_callback( '/<script([^>]*)>(.*?)<\/script>/is', array( $this, 'filter_script_tag' ), $html );
+	}
+
+	/**
+	 * Callback to modify script tags containing trackers based on cookie consent.
+	 *
+	 * @since    1.0.0
+	 * @param    array $matches Regex match containing the script tag, attributes, and content.
+	 * @return   string The unmodified or modified script tag.
+	 */
+	private function filter_script_tag( $matches ) {
+		$full_tag   = $matches[0];
+		$attributes = $matches[1];
+		$content    = $matches[2];
+
+		// Check if it already has a non-JS type (e.g. application/json, ld+json)
+		if ( preg_match( '/type\s*=\s*[\'"]([^\'"]+)[\'"]/i', $attributes, $type_match ) ) {
+			$type = strtolower( trim( $type_match[1] ) );
+			if ( ! in_array( $type, array( '', 'text/javascript', 'application/javascript', 'module' ) ) ) {
+				return $full_tag;
+			}
+		}
+
+		// Tracker patterns mapped to consent categories
+		$blocked_patterns = array(
+			'googletagmanager.com/gtag/js' => 'analytics',
+			'googletagmanager.com/gtm.js'  => 'analytics',
+			'google-analytics.com'         => 'analytics',
+			'gtag('                        => 'analytics',
+			'ga('                          => 'analytics',
+			'connect.facebook.net'         => 'marketing',
+			'snap.licdn.com'               => 'marketing',
+			'analytics.tiktok.com'         => 'marketing',
+			'static.hotjar.com'            => 'analytics',
+		);
+
+		$matched_category = null;
+		foreach ( $blocked_patterns as $pattern => $category ) {
+			if ( false !== stripos( $attributes, $pattern ) || false !== stripos( $content, $pattern ) ) {
+				$matched_category = $category;
+				break;
+			}
+		}
+
+		// If no tracker pattern matched, let it load normally
+		if ( ! $matched_category ) {
+			return $full_tag;
+		}
+
+		// Read cookie consent value
+		$consent = array();
+		if ( isset( $_COOKIE['altru_cookie_consent'] ) ) {
+			$decoded = json_decode( stripslashes( $_COOKIE['altru_cookie_consent'] ), true );
+			if ( is_array( $decoded ) ) {
+				$consent = $decoded;
+			}
+		}
+
+		// If the specific category is accepted, let it load normally
+		if ( isset( $consent[ $matched_category ] ) && true === $consent[ $matched_category ] ) {
+			return $full_tag;
+		}
+
+		// Otherwise, block the script
+		// 1. Set type attribute to text/plain
+		if ( preg_match( '/type\s*=\s*[\'"]([^\'"]+)[\'"]/i', $attributes ) ) {
+			$attributes = preg_replace( '/type\s*=\s*[\'"]([^\'"]+)[\'"]/i', 'type="text/plain"', $attributes );
+		} else {
+			$attributes .= ' type="text/plain"';
+		}
+
+		// 2. Add altru category data attribute
+		$attributes .= ' data-altru-category="' . esc_attr( $matched_category ) . '"';
+
+		// 3. Rename src to data-altru-src to prevent browser preload/download
+		if ( preg_match( '/src\s*=\s*[\'"]([^\'"]+)[\'"]/i', $attributes, $src_match ) ) {
+			$src        = $src_match[1];
+			$attributes = preg_replace( '/src\s*=\s*[\'"]([^\'"]+)[\'"]/i', 'data-altru-src="' . esc_url( $src ) . '"', $attributes );
+		}
+
+		return '<script' . $attributes . '>' . $content . '</script>';
+	}
 }

@@ -134,7 +134,7 @@
 			return null;
 		}
 
-		// Trigger custom event for other scripts to listen to
+		// Trigger custom event for other scripts to listen to and activate accepted scripts
 		function triggerConsentEvent(consentData) {
 			var event;
 			if (typeof window.CustomEvent === 'function') {
@@ -144,6 +144,46 @@
 				event.initCustomEvent('altruCookieConsentUpdated', true, true, consentData);
 			}
 			window.dispatchEvent(event);
+
+			// Activate the scripts that are now allowed
+			activateAcceptedScripts(consentData);
+		}
+
+		// Dynamically activate scripts that have been accepted by the user
+		function activateAcceptedScripts(consentData) {
+			if (!consentData) return;
+
+			var scripts = document.querySelectorAll('script[type="text/plain"][data-altru-category]');
+			
+			scripts.forEach(function(oldScript) {
+				var category = oldScript.dataset.altruCategory;
+				
+				if (consentData[category] === true) {
+					var newScript = document.createElement('script');
+					
+					// Copy all attributes except type and data-altru-src
+					Array.from(oldScript.attributes).forEach(function(attr) {
+						if (attr.name !== 'type' && attr.name !== 'data-altru-src' && attr.name !== 'src') {
+							newScript.setAttribute(attr.name, attr.value);
+						}
+					});
+					
+					newScript.type = 'text/javascript';
+					
+					if (oldScript.dataset.altruSrc) {
+						newScript.src = oldScript.dataset.altruSrc;
+					}
+					
+					if (oldScript.innerHTML) {
+						newScript.innerHTML = oldScript.innerHTML;
+					}
+					
+					if (oldScript.parentNode) {
+						oldScript.parentNode.insertBefore(newScript, oldScript);
+						oldScript.parentNode.removeChild(oldScript);
+					}
+				}
+			});
 		}
 	});
 })();
