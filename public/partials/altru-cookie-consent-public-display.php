@@ -12,11 +12,11 @@
  */
 
 $options = get_option( 'altru_cookie_consent_options' );
-$title   = isset( $options['cookie_bar_title'] ) ? $options['cookie_bar_title'] : '';
-$message = isset( $options['cookie_bar_message'] ) ? $options['cookie_bar_message'] : '';
-$accept  = isset( $options['btn_accept_all'] ) ? $options['btn_accept_all'] : 'Accept All';
-$reject  = isset( $options['btn_reject_all'] ) ? $options['btn_reject_all'] : 'Reject All';
-$pref    = isset( $options['btn_preferences'] ) ? $options['btn_preferences'] : 'Customize';
+$title   = isset( $options['cookie_bar_title'] ) ? $this->translate_string( 'cookie_bar_title', $options['cookie_bar_title'] ) : '';
+$message = isset( $options['cookie_bar_message'] ) ? $this->translate_string( 'cookie_bar_message', $options['cookie_bar_message'] ) : '';
+$accept  = isset( $options['btn_accept_all'] ) ? $this->translate_string( 'btn_accept_all', $options['btn_accept_all'] ) : 'Accept All';
+$reject  = isset( $options['btn_reject_all'] ) ? $this->translate_string( 'btn_reject_all', $options['btn_reject_all'] ) : 'Reject All';
+$pref    = isset( $options['btn_preferences'] ) ? $this->translate_string( 'btn_preferences', $options['btn_preferences'] ) : 'Customize';
 $cats    = isset( $options['consent_categories'] ) ? $options['consent_categories'] : array();
 ?>
 
@@ -31,7 +31,7 @@ $cats    = isset( $options['consent_categories'] ) ? $options['consent_categorie
 		</div>
 		<div class="altru-cookie-banner-actions">
 			<button id="altru-cookie-btn-preferences" class="altru-btn altru-btn-secondary" type="button"><?php echo esc_html( $pref ); ?></button>
-			<button id="altru-cookie-btn-reject" class="altru-btn altru-btn-outline" type="button"><?php echo esc_html( $reject ); ?></button>
+			<button id="altru-cookie-btn-reject" class="altru-btn altru-btn-primary" type="button"><?php echo esc_html( $reject ); ?></button>
 			<button id="altru-cookie-btn-accept" class="altru-btn altru-btn-primary" type="button"><?php echo esc_html( $accept ); ?></button>
 		</div>
 	</div>
@@ -41,20 +41,23 @@ $cats    = isset( $options['consent_categories'] ) ? $options['consent_categorie
 		<div class="altru-cookie-modal-backdrop"></div>
 		<div class="altru-cookie-modal-container">
 			<div class="altru-cookie-modal-header">
-				<h3 id="altru-modal-title"><?php esc_html_e( 'Cookie Preferences', 'altru-cookie-consent' ); ?></h3>
+				<h3 id="altru-modal-title"><?php echo esc_html( $this->translate_string( 'modal_title', 'Cookie Preferences' ) ); ?></h3>
 				<button id="altru-cookie-modal-close" class="altru-modal-close" aria-label="<?php esc_attr_e( 'Close', 'altru-cookie-consent' ); ?>" type="button">&times;</button>
 			</div>
 			<div class="altru-cookie-modal-body">
-				<p class="altru-modal-intro"><?php esc_html_e( 'Manage your consent preferences for cookies and similar technologies used on this website.', 'altru-cookie-consent' ); ?></p>
+				<p class="altru-modal-intro"><?php echo esc_html( $this->translate_string( 'modal_intro', 'Manage your consent preferences for cookies and similar technologies used on this website.' ) ); ?></p>
 				
 				<div class="altru-cookie-categories">
-					<?php foreach ( $cats as $key => $cat ) : ?>
+					<?php foreach ( $cats as $key => $cat ) : 
+						$cat_title = $this->translate_string( 'category_' . $key . '_title', $cat['title'] );
+						$cat_desc  = $this->translate_string( 'category_' . $key . '_desc', $cat['description'] );
+					?>
 						<div class="altru-cookie-category-item">
 							<div class="altru-cookie-category-header">
 								<div class="altru-cookie-category-title-wrap">
-									<span class="altru-cookie-category-title"><?php echo esc_html( $cat['title'] ); ?></span>
+									<span class="altru-cookie-category-title"><?php echo esc_html( $cat_title ); ?></span>
 									<?php if ( ! empty( $cat['required'] ) ) : ?>
-										<span class="altru-cookie-category-badge"><?php esc_html_e( 'Required', 'altru-cookie-consent' ); ?></span>
+										<span class="altru-cookie-category-badge"><?php echo esc_html( $this->translate_string( 'label_required', 'Required' ) ); ?></span>
 									<?php endif; ?>
 								</div>
 								<div class="altru-cookie-toggle-wrapper">
@@ -64,13 +67,13 @@ $cats    = isset( $options['consent_categories'] ) ? $options['consent_categorie
 									</label>
 								</div>
 							</div>
-							<p class="altru-cookie-category-desc"><?php echo esc_html( $cat['description'] ); ?></p>
+							<p class="altru-cookie-category-desc"><?php echo esc_html( $cat_desc ); ?></p>
 						</div>
 					<?php endforeach; ?>
 				</div>
 			</div>
 			<div class="altru-cookie-modal-footer">
-				<button id="altru-cookie-btn-save" class="altru-btn altru-btn-primary" type="button"><?php esc_html_e( 'Save Preferences', 'altru-cookie-consent' ); ?></button>
+				<button id="altru-cookie-btn-save" class="altru-btn altru-btn-primary" type="button"><?php echo esc_html( $this->translate_string( 'btn_save_settings', 'Save Preferences' ) ); ?></button>
 			</div>
 		</div>
 	</div>

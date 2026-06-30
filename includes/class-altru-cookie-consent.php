@@ -77,6 +77,8 @@ class Altru_Cookie_Consent {
 		$this->set_locale();
 		$this->define_admin_hooks();
 		$this->define_public_hooks();
+
+		$this->loader->add_action( 'init', $this, 'register_multilingual_strings' );
 	}
 
 	/**
@@ -185,5 +187,80 @@ class Altru_Cookie_Consent {
 	 */
 	public function get_version() {
 		return $this->version;
+	}
+
+	/**
+	 * Register strings for Polylang and WPML compatibility.
+	 *
+	 * @since    1.0.0
+	 */
+	public function register_multilingual_strings() {
+		$options = get_option( 'altru_cookie_consent_options' );
+		if ( ! is_array( $options ) ) {
+			return;
+		}
+
+		$strings = array(
+			'cookie_bar_title'   => array(
+				'value'     => isset( $options['cookie_bar_title'] ) ? $options['cookie_bar_title'] : '',
+				'multiline' => false,
+			),
+			'cookie_bar_message' => array(
+				'value'     => isset( $options['cookie_bar_message'] ) ? $options['cookie_bar_message'] : '',
+				'multiline' => true,
+			),
+			'btn_accept_all'     => array(
+				'value'     => isset( $options['btn_accept_all'] ) ? $options['btn_accept_all'] : '',
+				'multiline' => false,
+			),
+			'btn_reject_all'     => array(
+				'value'     => isset( $options['btn_reject_all'] ) ? $options['btn_reject_all'] : '',
+				'multiline' => false,
+			),
+			'btn_preferences'    => array(
+				'value'     => isset( $options['btn_preferences'] ) ? $options['btn_preferences'] : '',
+				'multiline' => false,
+			),
+			'modal_title'        => array(
+				'value'     => 'Cookie Preferences',
+				'multiline' => false,
+			),
+			'modal_intro'        => array(
+				'value'     => 'Manage your consent preferences for cookies and similar technologies used on this website.',
+				'multiline' => true,
+			),
+			'btn_save_settings'  => array(
+				'value'     => 'Save Preferences',
+				'multiline' => false,
+			),
+			'label_required'     => array(
+				'value'     => 'Required',
+				'multiline' => false,
+			),
+		);
+
+		// Dynamically register cookie category titles and descriptions
+		if ( isset( $options['consent_categories'] ) && is_array( $options['consent_categories'] ) ) {
+			foreach ( $options['consent_categories'] as $key => $cat ) {
+				$strings['category_' . $key . '_title'] = array(
+					'value'     => isset( $cat['title'] ) ? $cat['title'] : '',
+					'multiline' => false,
+				);
+				$strings['category_' . $key . '_desc'] = array(
+					'value'     => isset( $cat['description'] ) ? $cat['description'] : '',
+					'multiline' => true,
+				);
+			}
+		}
+
+		if ( function_exists( 'pll_register_string' ) ) {
+			foreach ( $strings as $key => $data ) {
+				pll_register_string( $key, $data['value'], 'altru-cookie-consent', $data['multiline'] );
+			}
+		} elseif ( function_exists( 'icl_register_string' ) ) {
+			foreach ( $strings as $key => $data ) {
+				icl_register_string( 'altru-cookie-consent', $key, $data['value'] );
+			}
+		}
 	}
 }

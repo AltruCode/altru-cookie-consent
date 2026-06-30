@@ -207,4 +207,24 @@ class Altru_Cookie_Consent_Public {
 
 		return '<script' . $attributes . '>' . $content . '</script>';
 	}
+
+	/**
+	 * Translate a string using Polylang or WPML and apply filters.
+	 *
+	 * @since    1.0.0
+	 * @param    string $name The string identifier.
+	 * @param    string $default_value The default string value.
+	 * @return   string The translated string.
+	 */
+	public function translate_string( $name, $default_value ) {
+		$translated = $default_value;
+
+		if ( function_exists( 'pll__' ) ) {
+			$translated = pll__( $default_value );
+		} elseif ( function_exists( 'icl_t' ) ) {
+			$translated = icl_t( 'altru-cookie-consent', $name, $default_value );
+		}
+
+		return apply_filters( 'altru_cookie_consent_text', $translated, $name );
+	}
 }
