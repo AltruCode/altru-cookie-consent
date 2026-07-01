@@ -163,6 +163,12 @@ class Altru_Cookie_Consent_Admin {
 
 	public function render_section_info() {
 		echo '<p>' . esc_html__( 'Configure the general settings for the cookie consent bar.', 'altru-cookie-consent' ) . '</p>';
+		echo '<div style="background-color: #f0f6fc; border-left: 4px solid #72aee6; padding: 12px 16px; margin: 15px 0 25px 0; border-radius: 0 4px 4px 0; max-width: 800px;">';
+		echo '<p style="margin: 0; font-size: 13px; color: #1d2327; line-height: 1.5;">';
+		echo '<strong>' . esc_html__( 'ℹ️ Multilingual Notice:', 'altru-cookie-consent' ) . '</strong> ';
+		echo esc_html__( 'If you modify these texts, remember to update their translations in your multilingual plugin (Polylang or WPML String Translation) to keep all language versions in sync.', 'altru-cookie-consent' );
+		echo '</p>';
+		echo '</div>';
 	}
 
 	public function render_title_field() {
