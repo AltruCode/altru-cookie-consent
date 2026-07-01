@@ -49,6 +49,9 @@ class Altru_Cookie_Consent_Public {
 	public function __construct( $plugin_name, $version ) {
 		$this->plugin_name = $plugin_name;
 		$this->version     = $version;
+
+		// Add custom styled variables to wp_head
+		add_action( 'wp_head', array( $this, 'inject_custom_styles' ) );
 	}
 
 	/**
@@ -226,5 +229,111 @@ class Altru_Cookie_Consent_Public {
 		}
 
 		return apply_filters( 'altru_cookie_consent_text', $translated, $name );
+	}
+
+	/**
+	 * Inject custom CSS variables into wp_head based on design settings.
+	 *
+	 * @since    1.0.0
+	 */
+	public function inject_custom_styles() {
+		$options = get_option( 'altru_cookie_consent_options' );
+		if ( ! is_array( $options ) ) {
+			return;
+		}
+
+		$primary_color   = isset( $options['primary_color'] ) ? $options['primary_color'] : '';
+		$banner_bg_color = isset( $options['banner_bg_color'] ) ? $options['banner_bg_color'] : '';
+		$border_radius   = isset( $options['border_radius'] ) ? $options['border_radius'] : '';
+
+		// If no design settings are customized, do not inject styling
+		if ( empty( $primary_color ) && empty( $banner_bg_color ) && '' === $border_radius ) {
+			return;
+		}
+
+		echo '<style id="altru-cookie-consent-custom-styles">';
+		echo ':root {';
+		
+		if ( ! empty( $primary_color ) ) {
+			$hover_color = $this->adjust_brightness( $primary_color, -15 ); // 15% darker for hover
+			echo '--altru-primary: ' . esc_attr( $primary_color ) . ';';
+			echo '--altru-primary-hover: ' . esc_attr( $hover_color ) . ';';
+		}
+		
+		if ( ! empty( $banner_bg_color ) ) {
+			$rgb = $this->hex2rgb( $banner_bg_color );
+			if ( $rgb ) {
+				echo '--altru-bg-glass: rgba(' . $rgb[0] . ',' . $rgb[1] . ',' . $rgb[2] . ', 0.85);';
+				echo '--altru-bg-modal: rgba(' . $rgb[0] . ',' . $rgb[1] . ',' . $rgb[2] . ', 0.95);';
+			} else {
+				echo '--altru-bg-glass: ' . esc_attr( $banner_bg_color ) . ';';
+				echo '--altru-bg-modal: ' . esc_attr( $banner_bg_color ) . ';';
+			}
+		}
+
+		if ( '' !== $border_radius ) {
+			echo '--altru-radius-md: ' . intval( $border_radius ) . 'px;';
+			echo '--altru-radius-lg: ' . ( intval( $border_radius ) + 4 ) . 'px;'; // Outer container is slightly rounder
+		}
+
+		echo '}';
+		echo '</style>';
+	}
+
+	/**
+	 * Helper function to adjust brightness of a hex color.
+	 *
+	 * @since    1.0.0
+	 * @param    string $hex Hex color code.
+	 * @param    int    $steps Steps to adjust (-255 to 255).
+	 * @return   string Adjusted hex color code.
+	 */
+	private function adjust_brightness( $hex, $steps ) {
+		$hex = str_replace( '#', '', $hex );
+
+		if ( 3 === strlen( $hex ) ) {
+			$hex = $hex[0] . $hex[0] . $hex[1] . $hex[1] . $hex[2] . $hex[2];
+		}
+
+		$steps = max( -255, min( 255, $steps ) );
+
+		$r = hexdec( substr( $hex, 0, 2 ) );
+		$g = hexdec( substr( $hex, 2, 2 ) );
+		$b = hexdec( substr( $hex, 4, 2 ) );
+
+		$r = max( 0, min( 255, $r + $steps ) );
+		$g = max( 0, min( 255, $g + $steps ) );
+		$b = max( 0, min( 255, $b + $steps ) );
+
+		$r_hex = str_pad( dechex( $r ), 2, '0', STR_PAD_LEFT );
+		$g_hex = str_pad( dechex( $g ), 2, '0', STR_PAD_LEFT );
+		$b_hex = str_pad( dechex( $b ), 2, '0', STR_PAD_LEFT );
+
+		return '#' . $r_hex . $g_hex . $b_hex;
+	}
+
+	/**
+	 * Convert Hex color to RGB.
+	 *
+	 * @since    1.0.0
+	 * @param    string $hex Hex color code.
+	 * @return   array|false RGB array or false.
+	 */
+	private function hex2rgb( $hex ) {
+		$hex = str_replace( '#', '', $hex );
+
+		if ( 3 === strlen( $hex ) ) {
+			$hex = $hex[0] . $hex[0] . $hex[1] . $hex[1] . $hex[2] . $hex[2];
+		}
+
+		if ( 6 !== strlen( $hex ) ) {
+			return false;
+		}
+
+		return array(
+			hexdec( substr( $hex, 0, 2 ) ),
+			hexdec( substr( $hex, 2, 2 ) ),
+			hexdec( substr( $hex, 4, 2 ) )
+		);
 	}
 }
