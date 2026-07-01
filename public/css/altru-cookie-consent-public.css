@@ -424,3 +424,42 @@
 		border-radius: 0;
 	}
 }
+
+/* Reopen Trigger Button - Subtle Monochrome */
+.altru-cookie-reopen {
+	position: fixed;
+	bottom: 24px;
+	left: 24px;
+	width: 44px;
+	height: 44px;
+	border-radius: 50%;
+	background: rgba(30, 30, 36, 0.75);
+	backdrop-filter: blur(8px);
+	-webkit-backdrop-filter: blur(8px);
+	color: #ffffff;
+	border: 1px solid rgba(255, 255, 255, 0.15);
+	cursor: pointer;
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+	z-index: 999999999;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 1.3rem;
+	line-height: 1;
+	filter: grayscale(100%);
+	opacity: 0.65;
+	transition: var(--altru-transition);
+	pointer-events: auto;
+}
+
+.altru-cookie-reopen:hover {
+	background: rgba(30, 30, 36, 0.9);
+	opacity: 1;
+	filter: none;
+	transform: scale(1.05);
+	border-color: rgba(255, 255, 255, 0.3);
+}
+
+.altru-cookie-reopen.altru-hidden {
+	display: none !important;
+}

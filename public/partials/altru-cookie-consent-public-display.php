@@ -78,3 +78,6 @@ $cats    = isset( $options['consent_categories'] ) ? $options['consent_categorie
 		</div>
 	</div>
 </div>
+
+<!-- Cookie Settings Re-open Trigger -->
+<button id="altru-cookie-btn-reopen" class="altru-cookie-reopen altru-hidden" aria-label="<?php esc_attr_e( 'Cookie Settings', 'altru-cookie-consent' ); ?>" type="button">🍪</button>

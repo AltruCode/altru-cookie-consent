@@ -14,6 +14,7 @@
 		var wrapper = document.getElementById('altru-cookie-consent');
 		if (!wrapper) return;
 
+		var btnReopen = document.getElementById('altru-cookie-btn-reopen');
 		var btnAccept = document.getElementById('altru-cookie-btn-accept');
 		var btnReject = document.getElementById('altru-cookie-btn-reject');
 		var btnPref = document.getElementById('altru-cookie-btn-preferences');
@@ -35,9 +36,14 @@
 		function init() {
 			var consent = getCookie(cookieName);
 			if (!consent) {
-				// Show cookie banner
+				// Show cookie banner, hide reopen button
 				wrapper.classList.remove('altru-hidden');
+				if (btnReopen) btnReopen.classList.add('altru-hidden');
 			} else {
+				// Hide cookie banner, show reopen button
+				wrapper.classList.add('altru-hidden');
+				if (btnReopen) btnReopen.classList.remove('altru-hidden');
+				
 				// Apply consent if already saved (trigger scripts)
 				try {
 					var consentData = JSON.parse(consent);
@@ -48,6 +54,12 @@
 			}
 
 			// Bind Events
+			if (btnReopen) {
+				btnReopen.addEventListener('click', function() {
+					wrapper.classList.remove('altru-hidden');
+					btnReopen.classList.add('altru-hidden');
+				});
+			}
 			if (btnAccept) btnAccept.addEventListener('click', acceptAll);
 			if (btnReject) btnReject.addEventListener('click', rejectAll);
 			if (btnPref) btnPref.addEventListener('click', openPreferences);
@@ -107,9 +119,65 @@
 		}
 
 		function save(consentData) {
+			var isChange = !!getCookie(cookieName);
+			
 			setCookie(cookieName, JSON.stringify(consentData), expiryDays);
+			
+			// Delete cookies of rejected categories
+			for (var cat in consentData) {
+				if (consentData.hasOwnProperty(cat) && !consentData[cat]) {
+					deleteCookiesForCategory(cat);
+				}
+			}
+
 			wrapper.classList.add('altru-hidden');
+			if (btnReopen) btnReopen.classList.remove('altru-hidden');
 			triggerConsentEvent(consentData);
+
+			// Reload page to clean state and stop trackers if consent changed or declined
+			if (isChange || !consentData['analytics'] || !consentData['marketing']) {
+				location.reload();
+			}
+		}
+
+		function deleteCookiesForCategory(category) {
+			var cookies = document.cookie.split(";");
+			var domains = [
+				window.location.hostname,
+				'.' + window.location.hostname,
+				window.location.hostname.replace(/^www\./, ''),
+				'.' + window.location.hostname.replace(/^www\./, '')
+			];
+
+			var patterns = [];
+			if (category === 'analytics') {
+				patterns = [/^__utma/, /^__utmb/, /^__utmc/, /^__utmz/, /^_ga/, /^_gid/, /^_gat/, /^_hj/];
+			} else if (category === 'marketing') {
+				patterns = [/^_fbp/, /^_gcl_au/, /^_uetsid/, /^_uetvid/, /^li_sugr/, /^UserMatchHistory/, /^AnalyticsSyncHistory/];
+			}
+
+			if (patterns.length === 0) return;
+
+			for (var i = 0; i < cookies.length; i++) {
+				var cookie = cookies[i].trim();
+				var eqPos = cookie.indexOf("=");
+				var name = eqPos > -1 ? cookie.substr(0, eqPos) : cookie;
+
+				var match = false;
+				for (var p = 0; p < patterns.length; p++) {
+					if (patterns[p].test(name)) {
+						match = true;
+						break;
+					}
+				}
+
+				if (match) {
+					domains.forEach(function(domain) {
+						document.cookie = name + "=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=" + domain;
+						document.cookie = name + "=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+					});
+				}
+			}
 		}
 
 		// Cookie Helpers
